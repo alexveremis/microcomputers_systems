@@ -1,0 +1,27 @@
+START: 
+
+MVI C,08H ;puts to C the number the starting address 0800 
+
+LDA 2000H ;puts to A what is inside of the address 2000
+
+SIMEIO1: 
+
+RAL ;reverses the bits of and A0->CY
+
+JC SIMEIO2 ;if CY=1 go to SIMEIO2
+
+DCR C ; C--
+
+JNZ SIMEIO1 ;if Z<>0 go to SIMEIO 1
+
+SIMEIO2: 
+
+MOV A,C ;C->A
+
+CMA ;simplironei os pros 1 ton A
+
+STA 3000H ;A->M(3000)
+
+RST 1 ;interrupts code and sends PC to starting address
+
+END 

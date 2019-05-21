@@ -1,0 +1,72 @@
+	MOV D,FFH
+	MOV A,D
+	STA 3000H		;Initially, lights are off
+	MVI E,96H		;E = 150 (counter for 30sec)
+	LXI B,00C8H		;BC = 200ms
+INIT:
+	CALL GET_MSB
+	CPI 00H 		;Wait for first OFF
+	JZ OFF1
+	CALL DELB		;If it's not yet OFF,wait until it comes
+	JMP INIT
+
+OFF1:
+	CALL GET_MSB
+	CPI 80H			;Wait for first ON after OFF
+	JZ ON1
+	CALL DELB
+	JMP OFF1
+
+ON1:
+	CALL GET_MSB
+	CPI 00H 		;Wait for second OFF
+	JZ OFF2
+	CALL DELB
+	JMP ON1
+
+OFF2:
+	CALL GET_MSB
+	CPI 01H
+	JZ ON2			;Wait for second ON
+	CALL TOGGLE		;If not second ON, toggle lights
+	CALL DELB
+	DCR E 			;Decrease timer by 200ms
+	MOV A,E
+	CPI 00H 		;If 30 secs have not passed
+	JNZ OFF2		;Repeat
+	CALL TURN_OFF		;Else turn off the lights
+	JMP OFF1		;And go to OFF1 routine
+
+ON2:
+	CALL GET_MSB
+	CPI 00H 		;Wait for third OFF
+	JZ OFF3		;On third OFF, go to OFF3
+	CALL TOGGLE 		;Else toggle lights
+	CALL DELB		;delay routine
+	DCR E 			;Same as OFF2
+	MOV A,E
+	CPI FFH
+	JNZ ON2
+	CALL TURN_OFF
+	JMP OFF1
+
+OFF3:
+	MVI E,96H		;Reset counter to 30sec
+	JMP OFF2		;Go to OFF2 Again
+
+TOGGLE:
+	MOV A,D 		;Toggle lights
+	CMA			;?????????? ??? ?????? ??? ?? ??????? ??? ?? ????
+	MOV D,A
+	STA 3000H
+	RET
+
+TURN_OFF:
+	MVI A,FFH		;Turn off lights
+	STA 3000H
+	RET
+
+GET_MSB:
+	LDA 2000H		;Get MSB from dip switches
+	ANI 80H
+	RET

@@ -1,0 +1,101 @@
+MVI C,00H	; THE FIRST MS LEDS ALWAYS OFF THAT'S WHY
+		; WE LOAD 00H and not F0H
+
+
+;Calculate X0_a
+	;Load B0
+	LDA 2000H
+	ANI 01H		;Mask for 1st LSB digit
+	CALL GET_DIGIT
+	MOV B,A
+	;Load A0
+	LDA 2000H
+	ANI 02H
+	CALL GET_DIGIT
+	;X0 = A0 | B0
+	ORA B
+	;Store X0_a for next operation
+	MOV D,A
+
+;Calculate X1
+	;Load B1
+	LDA 2000H
+	ANI 04H
+	CALL GET_DIGIT
+	MOV B,A
+	;Load A1
+	LDA 2000H
+	ANI 08H
+	CALL GET_DIGIT
+	;X1 = A1 | B1
+	ORA B
+;Calculate X0
+	XRA D
+	;Store this bit in C
+	ORA C
+	MOV C,A
+	;X1 = A1 | B1
+	ORA B
+	;Shift and store
+	RLC
+	ORA C
+	MOV C,A
+
+
+
+
+;Calculate X2
+	;Load B2
+	LDA 2000H
+	ANI 10H
+	CALL GET_DIGIT
+	MOV B,A
+	;Load A2
+	LDA 2000H
+	ANI 20H
+	CALL GET_DIGIT
+	;X2 = A2 & B2
+	ANA B
+	;Shift and store
+	RLC
+	RLC
+	ORA C
+	MOV C,A
+
+;Calculate X3
+	;Load B3
+	LDA 2000H
+	ANI 40H
+	CALL GET_DIGIT
+	MOV B,A
+	;Load A3
+	LDA 2000H
+	ANI 80H
+	CALL GET_DIGIT
+	;X3 = A3 & B3
+	ANA B
+	;Shift and store
+	RLC
+	RLC
+	RLC
+	ORA C
+	MOV C,A
+
+;Move C to LEDs in order to display the right turned on LEDs
+	MOV A,C
+;Complement A because LEDs are on when bit is 0
+	CMA
+	STA 3000H
+	HLT
+
+
+
+GET_DIGIT:
+	JPE A0		;If result had even parity, this
+	JMP A1		;means it was all zeros => digit was 0
+A0:	MVI A,00H
+	RET
+A1:	MVI A,01H
+	RET
+
+	END
